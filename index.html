@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento - Conserto Cadeira de Rodas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💺 Orçamento - Conserto de Cadeira de Rodas</h1>
+        </header>
+
+        <form id="form-orcamento" class="form-orcamento">
+            <!-- Dados do Cliente -->
+            <div class="form-section">
+                <h3>👤 Dados do Cliente</h3>
+                <input type="text" id="nome" placeholder="Nome completo" required>
+                <input type="tel" id="telefone" placeholder="Telefone">
+                <input type="email" id="email" placeholder="E-mail">
+            </div>
+
+            <!-- Tipo de Conserto -->
+            <div class="form-section">
+                <h3>🔧 Tipo de Conserto</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="servico" value="roda"> Troca de Roda - R$ 150,00</label>
+                    <label><input type="checkbox" name="servico" value="freio"> Ajuste de Freio - R$ 80,00</label>
+                    <label><input type="checkbox" name="servico" value="estofamento"> Recuperação de Estofamento - R$ 200,00</label>
+                    <label><input type="checkbox" name="servico" value="eixo"> Alinhamento de Eixo - R$ 120,00</label>
+                    <label><input type="checkbox" name="servico" value="manutencao"> Manutenção Preventiva - R$ 100,00</label>
+                </div>
+            </div>
+
+            <!-- Urgência -->
+            <div class="form-section">
+                <h3>⏰ Urgência do Serviço</h3>
+                <select id="urgencia">
+                    <option value="1.0">Normal (5-7 dias) - Sem acréscimo</option>
+                    <option value="1.2">Urgente (2-3 dias) - +20%</option>
+                    <option value="1.5">Imediato (24h) - +50%</option>
+                </select>
+            </div>
+
+            <!-- Observações -->
+            <div class="form-section">
+                <h3>📝 Observações</h3>
+                <textarea id="observacoes" placeholder="Descreva o problema detalhadamente..."></textarea>
+            </div>
+
+            <button type="submit">Gerar Orçamento</button>
+        </form>
+
+        <!-- Resultado do Orçamento -->
+        <div id="resultado" class="resultado" style="display: none;">
+            <h3>📋 Orçamento Gerado</h3>
+            <div id="detalhes-orcamento"></div>
+            <button onclick="imprimirOrcamento()">🖨️ Imprimir Orçamento</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
