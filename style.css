@@ -133,3 +133,44 @@ button:hover {
     background: #f0f0f0;
     padding-left: 10px;
 }
+
+/* === ESTILOS LOCALSTORAGE === 🔽*/
+
+.status-pendente {
+    background: #ff9800;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.status-aprovado {
+    background: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.btn-testar {
+    background: #607d8b !important;
+    margin-top: 10px;
+    padding: 10px !important;
+    font-size: 14px !important;
+}
+
+.btn-testar:hover {
+    background: #546e7a !important;
+    transform: translateY(-1px) !important;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
