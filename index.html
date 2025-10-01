@@ -52,11 +52,37 @@
             <button type="submit">Gerar Orçamento</button>
         </form>
 
-        <!-- Resultado do Orçamento -->
-        <div id="resultado" class="resultado" style="display: none;">
-            <h3>📋 Orçamento Gerado</h3>
-            <div id="detalhes-orcamento"></div>
-            <button onclick="imprimirOrcamento()">🖨️ Imprimir Orçamento</button>
+                <!-- Resultado do Orçamento -->
+            <div id="resultado" class="resultado" style="display: none;">
+                <h3>📋 Orçamento Gerado</h3>
+                <div id="detalhes-orcamento"></div>
+                <button onclick="imprimirOrcamento()">🖨️ Imprimir Orçamento</button>
+            </div>
+                <!-- Seção de Histórico de Orçamentos -->
+            <div id="historico-orcamentos" class="historico-section">
+                <h3>📊 Histórico de Orçamentos</h3>
+    
+            <div class="filtros-historico">
+                <button onclick="filtrarHistorico('todos')" class="btn-filtro ativo">Todos</button>
+                <button onclick="filtrarHistorico('pendente')" class="btn-filtro">Pendentes</button>
+                <button onclick="filtrarHistorico('aprovado')" class="btn-filtro">Aprovados</button>
+                <button onclick="filtrarHistorico('finalizado')" class="btn-filtro">Finalizados</button>
+                <button onclick="limparHistorico()" class="btn-limpar-historico">🗑️ Limpar Histórico</button>
+            </div>
+
+            <div class="estatisticas">
+                <span id="total-orcamentos">Total: 0</span>
+                <span id="total-valor">Valor Total: R$ 0,00</span>
+            </div>
+
+            <div id="lista-orcamentos" class="lista-orcamentos">
+                <!-- Lista será preenchida dinamicamente -->
+            </div>
+
+            <div id="sem-orcamentos" class="sem-orcamentos">
+                <p>📭 Nenhum orçamento salvo ainda.</p>
+                <p>Crie seu primeiro orçamento acima! 👆</p>
+            </div>
         </div>
     </div>
 
