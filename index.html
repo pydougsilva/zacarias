@@ -33,24 +33,30 @@
                 </div>
             </div>
 
-            <!-- Urgência -->
-            <div class="form-section">
-                <h3>⏰ Urgência do Serviço</h3>
-                <select id="urgencia">
-                    <option value="1.0">Normal (5-7 dias) - Sem acréscimo</option>
-                    <option value="1.2">Urgente (2-3 dias) - +20%</option>
-                    <option value="1.5">Imediato (24h) - +50%</option>
-                </select>
-            </div>
+                <!-- Urgência -->
+                <div class="form-section">
+                    <h3>⏰ Urgência do Serviço</h3>
+                    <select id="urgencia">
+                        <option value="1.0">Normal (5-7 dias) - Sem acréscimo</option>
+                        <option value="1.2">Urgente (2-3 dias) - +20%</option>
+                        <option value="1.5">Imediato (24h) - +50%</option>
+                    </select>
+                </div>
 
-            <!-- Observações -->
-            <div class="form-section">
-                <h3>📝 Observações</h3>
-                <textarea id="observacoes" placeholder="Descreva o problema detalhadamente..."></textarea>
-            </div>
+                <!-- Observações -->
+                <div class="form-section">
+                    <h3>📝 Observações</h3>
+                    <textarea id="observacoes" placeholder="Descreva o problema detalhadamente..."></textarea>
+                </div>
 
-            <button type="submit">Gerar Orçamento</button>
-        </form>
+                <div class="botoes-formulario">
+                    <button type="submit" id="btn-submit">Gerar Orçamento</button>
+                    <button type="button" id="btn-cancelar-edicao" style="display: none; background: #6c757d;">
+                    ❌ Cancelar Edição
+                    </button>
+                </div>
+
+            </form>
 
                 <!-- Resultado do Orçamento -->
             <div id="resultado" class="resultado" style="display: none;">

@@ -1,5 +1,4 @@
 // Preços dos serviços
-
 const precos = {
     roda: 150.00,
     freio: 80.00,
@@ -16,6 +15,10 @@ const nomesServicos = {
     eixo: "Alinhamento de Eixo",
     manutencao: "Manutenção Preventiva"
 };
+
+// === CONTROLE DE EDIÇÃO ===
+let orcamentoEditando = null;
+let modoEdicao = false;
 
 // === LOCALSTORAGE - FUNÇÕES BÁSICAS ===
 
@@ -60,13 +63,43 @@ function carregarOrcamentosDoLocalStorage() {
     }
 }
 
+// Função para ATUALIZAR orçamento existente no localStorage
+function atualizarOrcamentoNoLocalStorage(id, orcamentoAtualizado) {
+    console.log("🔄 Atualizando orçamento:", id);
+    
+    try {
+        const orcamentos = carregarOrcamentosDoLocalStorage();
+        const index = orcamentos.findIndex(orc => orc.id === id);
+        
+        if (index === -1) {
+            console.error("❌ Orçamento não encontrado para atualização");
+            return false;
+        }
+        
+        // Mantém o ID, data original e timestamp original
+        orcamentoAtualizado.id = id;
+        orcamentoAtualizado.data = orcamentos[index].data;
+        orcamentoAtualizado.timestamp = orcamentos[index].timestamp;
+        
+        // Atualiza o orçamento
+        orcamentos[index] = orcamentoAtualizado;
+        localStorage.setItem('orcamentosCadeiraRodas', JSON.stringify(orcamentos));
+        
+        console.log("✅ Orçamento atualizado com sucesso!");
+        return true;
+        
+    } catch (erro) {
+        console.error("❌ Erro ao atualizar orçamento:", erro);
+        return false;
+    }
+}
+
 // DEBUG: Verifica se script carregou
 console.log("🔧 script.js carregado com sucesso!");
 
 // Aguarda o DOM carregar completamente
 document.addEventListener('DOMContentLoaded', function() {
     console.log("📄 DOM carregado!");
-    carregarHistorico(); // Carregar histórico ao iniciar
     
     // Carrega orçamentos existentes ao iniciar
     const orcamentosSalvos = carregarOrcamentosDoLocalStorage();
@@ -81,10 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log("✅ Formulário encontrado, adicionando event listener...");
     
-    // Event listener para o formulário - AGORA COM SALVAMENTO
+    // Event listener para o formulário - AGORA COM EDIÇÃO
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        console.log("🎯 Formulário submetido - Iniciando processo...");
+        console.log("🎯 Formulário submetido - Modo:", modoEdicao ? "EDIÇÃO" : "CRIAÇÃO");
         
         // Coleta dados do formulário
         const nome = document.getElementById('nome').value;
@@ -115,39 +148,75 @@ document.addEventListener('DOMContentLoaded', function() {
         const calculoOrcamento = calcularOrcamento(servicosSelecionados, urgencia);
         console.log("💰 Orçamento calculado:", calculoOrcamento);
         
-        // Criar objeto completo do orçamento
-        const orcamentoCompleto = {
-            id: gerarIdUnico(),
-            data: new Date().toLocaleString('pt-BR'),
-            timestamp: Date.now(),
-            cliente: {
-                nome: nome.trim(),
-                telefone: telefone.trim(),
-                email: email.trim()
-            },
-            servicos: calculoOrcamento.servicos,
-            total: calculoOrcamento.total,
-            urgencia: urgencia,
-            observacoes: observacoes.trim(), // JÁ É STRING - CORRETO
-            status: 'pendente'
-        };
+        if (modoEdicao && orcamentoEditando) {
+            // === MODO EDIÇÃO ===
+            const orcamentoAtualizado = {
+                cliente: {
+                    nome: nome.trim(),
+                    telefone: telefone.trim(),
+                    email: email.trim()
+                },
+                servicos: calculoOrcamento.servicos,
+                total: calculoOrcamento.total,
+                urgencia: urgencia,
+                observacoes: observacoes.trim(),
+                status: 'pendente'
+            };
 
-        console.log("📦 Objeto orçamento criado:", orcamentoCompleto);
-
-        // SALVAR NO LOCALSTORAGE
-        const salvou = salvarOrcamentoNoLocalStorage(orcamentoCompleto);
-        
-        if (salvou) {
-            // Exibe resultado na tela
-            exibirResultado(orcamentoCompleto);
-            carregarHistorico(); // 🔽 ADICIONAR ESTA LINHA
+            // ATUALIZA no localStorage
+            const atualizou = atualizarOrcamentoNoLocalStorage(orcamentoEditando, orcamentoAtualizado);
             
-            // Mostra mensagem de sucesso
-            mostrarMensagemSucesso('Orçamento salvo com sucesso! ✅');
+            if (atualizou) {
+                // Exibe resultado atualizado
+                const orcamentos = carregarOrcamentosDoLocalStorage();
+                const orcamentoCompleto = orcamentos.find(orc => orc.id === orcamentoEditando);
+                
+                exibirResultado(orcamentoCompleto);
+                mostrarMensagemSucesso('Orçamento atualizado com sucesso! ✏️');
+                carregarHistorico();
+                
+                // Volta ao modo normal
+                cancelarEdicao();
+            } else {
+                alert('❌ Erro ao atualizar orçamento. Tente novamente.');
+            }
+            
         } else {
-            alert('❌ Erro ao salvar orçamento. Tente novamente.');
+            // === MODO CRIAÇÃO ===
+            const orcamentoCompleto = {
+                id: gerarIdUnico(),
+                data: new Date().toLocaleString('pt-BR'),
+                timestamp: Date.now(),
+                cliente: {
+                    nome: nome.trim(),
+                    telefone: telefone.trim(),
+                    email: email.trim()
+                },
+                servicos: calculoOrcamento.servicos,
+                total: calculoOrcamento.total,
+                urgencia: urgencia,
+                observacoes: observacoes.trim(),
+                status: 'pendente'
+            };
+
+            // SALVA no localStorage
+            const salvou = salvarOrcamentoNoLocalStorage(orcamentoCompleto);
+            
+            if (salvou) {
+                exibirResultado(orcamentoCompleto);
+                mostrarMensagemSucesso('Orçamento salvo com sucesso! ✅');
+                carregarHistorico();
+            } else {
+                alert('❌ Erro ao salvar orçamento. Tente novamente.');
+            }
         }
     });
+
+    // Event listener para o botão cancelar edição
+    document.getElementById('btn-cancelar-edicao').addEventListener('click', cancelarEdicao);
+    
+    // Carregar histórico ao iniciar
+    carregarHistorico();
 });
 
 // Função para calcular orçamento
@@ -174,7 +243,7 @@ function calcularOrcamento(servicos, multiplicadorUrgencia) {
     };
 }
 
-// Função para exibir resultado - VERSÃO CORRIGIDA
+// Função para exibir resultado
 function exibirResultado(orcamento) {
     const detalhes = document.getElementById('detalhes-orcamento');
     const resultadoDiv = document.getElementById('resultado');
@@ -215,7 +284,6 @@ function exibirResultado(orcamento) {
         </div>
     `;
 
-    // ✅ CORREÇÃO: Agora usando orcamento.observacoes (já é string corretamente)
     if (orcamento.observacoes && orcamento.observacoes.trim() !== '') {
         html += `<div class="observacoes"><strong>📝 Observações:</strong> ${orcamento.observacoes}</div>`;
     }
@@ -233,94 +301,83 @@ function exibirResultado(orcamento) {
     console.log("📋 Resultado exibido na tela!");
 }
 
-// === FUNÇÕES AUXILIARES ===
+// === FUNÇÕES DE EDIÇÃO ===
 
-// Função para mostrar mensagem de sucesso
-function mostrarMensagemSucesso(mensagem) {
-    const mensagemDiv = document.createElement('div');
-    mensagemDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 5px;
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
-    `;
-    mensagemDiv.textContent = mensagem;
+// Função para preencher formulário com dados de um orçamento existente
+function preencherFormularioEdicao(orcamento) {
+    console.log("✏️ Preenchendo formulário para edição:", orcamento.id);
     
-    document.body.appendChild(mensagemDiv);
+    // Preenche dados básicos
+    document.getElementById('nome').value = orcamento.cliente.nome;
+    document.getElementById('telefone').value = orcamento.cliente.telefone || '';
+    document.getElementById('email').value = orcamento.cliente.email || '';
+    document.getElementById('urgencia').value = orcamento.urgencia;
+    document.getElementById('observacoes').value = orcamento.observacoes || '';
     
-    setTimeout(() => {
-        mensagemDiv.remove();
-    }, 3000);
+    // Limpa seleções anteriores
+    document.querySelectorAll('input[name="servico"]').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.parentElement.style.background = 'white';
+        checkbox.parentElement.style.transform = 'scale(1)';
+    });
+    
+    // Marca os serviços selecionados originalmente
+    orcamento.servicos.forEach(servico => {
+        const servicoKey = Object.keys(nomesServicos).find(
+            key => nomesServicos[key] === servico.nome
+        );
+        
+        if (servicoKey) {
+            const checkbox = document.querySelector(`input[name="servico"][value="${servicoKey}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.parentElement.style.background = '#e3f2fd';
+                checkbox.parentElement.style.transform = 'scale(1.02)';
+            }
+        }
+    });
+    
+    // Ativa modo de edição
+    modoEdicao = true;
+    orcamentoEditando = orcamento.id;
+    
+    // Atualiza interface para modo edição
+    document.getElementById('btn-submit').textContent = '💾 Atualizar Orçamento';
+    document.getElementById('btn-cancelar-edicao').style.display = 'block';
+    document.getElementById('form-orcamento').classList.add('modo-edicao');
+    
+    // Scroll para o formulário
+    document.getElementById('form-orcamento').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+    
+    console.log("✅ Formulário pronto para edição");
 }
 
-// Função para testar se o localStorage está funcionando
-function verificarLocalStorage() {
-    const orcamentos = carregarOrcamentosDoLocalStorage();
-    const mensagem = `📊 Total de orçamentos salvos: ${orcamentos.length}\n\n` +
-                    `Último orçamento: ${orcamentos.length > 0 ? orcamentos[orcamentos.length - 1].cliente.nome : 'Nenhum'}\n\n` +
-                    `Veja os dados completos no Console (F12)`;
+// Função para cancelar edição e voltar ao modo normal
+function cancelarEdicao() {
+    modoEdicao = false;
+    orcamentoEditando = null;
     
-    alert(mensagem);
-    console.log("💾 Orçamentos no localStorage:", orcamentos);
-}
-
-// Função para limpar formulário e criar novo orçamento
-function limparFormulario() {
+    // Restaura interface normal
+    document.getElementById('btn-submit').textContent = 'Gerar Orçamento';
+    document.getElementById('btn-cancelar-edicao').style.display = 'none';
+    document.getElementById('form-orcamento').classList.remove('modo-edicao');
+    
+    // Limpa formulário
     document.getElementById('form-orcamento').reset();
-    document.getElementById('resultado').style.display = 'none';
     
-    // Remove efeitos visuais dos checkboxes
+    // Limpa efeitos visuais dos checkboxes
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.parentElement.style.background = 'white';
         checkbox.parentElement.style.transform = 'scale(1)';
     });
     
-    // Scroll para o topo
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    console.log("🆕 Formulário limpo para novo orçamento");
+    console.log("❌ Edição cancelada");
 }
 
-// Função para obter texto do prazo
-function obterPrazo(urgencia) {
-    const prazos = {
-        1.0: '5-7 dias úteis',
-        1.2: '2-3 dias úteis (+20%)', 
-        1.5: '24 horas (+50%)'
-    };
-    return prazos[urgencia] || 'A combinar';
-}
-
-// Efeitos visuais para checkboxes
-document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        if (this.checked) {
-            this.parentElement.style.background = '#e3f2fd';
-            this.parentElement.style.transform = 'scale(1.02)';
-        } else {
-            this.parentElement.style.background = 'white';
-            this.parentElement.style.transform = 'scale(1)';
-        }
-    });
-});
-
-// Função de impressão
-function imprimirOrcamento() {
-    console.log("🖨️ Imprimindo orçamento...");
-    window.print();
-}
-// === HISTÓRICO DE ORÇAMENTOS === 🔽
-
-// Função para exibir/ocultar a seção de histórico
-function toggleHistorico() {
-    const historicoSection = document.getElementById('historico-orcamentos');
-    historicoSection.classList.toggle('mostrar');
-}
+// === FUNÇÕES DO HISTÓRICO ===
 
 // Função para carregar e exibir o histórico
 function carregarHistorico(filtro = 'todos') {
@@ -441,6 +498,18 @@ function visualizarOrcamento(id) {
     }
 }
 
+// Função para editar orçamento
+function editarOrcamento(id) {
+    const orcamentos = carregarOrcamentosDoLocalStorage();
+    const orcamento = orcamentos.find(orc => orc.id === id);
+    
+    if (orcamento) {
+        preencherFormularioEdicao(orcamento);
+    } else {
+        alert('❌ Orçamento não encontrado!');
+    }
+}
+
 // Função para excluir um orçamento
 function excluirOrcamento(id) {
     if (confirm('Tem certeza que deseja excluir este orçamento?')) {
@@ -463,24 +532,86 @@ function limparHistorico() {
     }
 }
 
-// Função para editar orçamento (será implementada depois)
-function editarOrcamento(id) {
-    alert('✏️ Funcionalidade de edição será implementada no próximo passo!');
-    console.log('Editando orçamento:', id);
+// === FUNÇÕES AUXILIARES ===
+
+// Função para mostrar mensagem de sucesso
+function mostrarMensagemSucesso(mensagem) {
+    const mensagemDiv = document.createElement('div');
+    mensagemDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+    `;
+    mensagemDiv.textContent = mensagem;
+    
+    document.body.appendChild(mensagemDiv);
+    
+    setTimeout(() => {
+        mensagemDiv.remove();
+    }, 3000);
 }
 
-// Função para exportar histórico (bônus)
-function exportarHistorico() {
+// Função para testar se o localStorage está funcionando
+function verificarLocalStorage() {
     const orcamentos = carregarOrcamentosDoLocalStorage();
-    const dataStr = JSON.stringify(orcamentos, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const mensagem = `📊 Total de orçamentos salvos: ${orcamentos.length}\n\n` +
+                    `Último orçamento: ${orcamentos.length > 0 ? orcamentos[orcamentos.length - 1].cliente.nome : 'Nenhum'}\n\n` +
+                    `Veja os dados completos no Console (F12)`;
     
-    const exportFileDefaultName = `historico-orcamentos-${new Date().toLocaleDateString('pt-BR')}.json`;
+    alert(mensagem);
+    console.log("💾 Orçamentos no localStorage:", orcamentos);
+}
+
+// Função para limpar formulário e criar novo orçamento
+function limparFormulario() {
+    document.getElementById('form-orcamento').reset();
+    document.getElementById('resultado').style.display = 'none';
     
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    // Remove efeitos visuais dos checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.parentElement.style.background = 'white';
+        checkbox.parentElement.style.transform = 'scale(1)';
+    });
+    
+    // Scroll para o topo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    console.log("🆕 Formulário limpo para novo orçamento");
+}
+
+// Função para obter texto do prazo
+function obterPrazo(urgencia) {
+    const prazos = {
+        1.0: '5-7 dias úteis',
+        1.2: '2-3 dias úteis (+20%)', 
+        1.5: '24 horas (+50%)'
+    };
+    return prazos[urgencia] || 'A combinar';
+}
+
+// Efeitos visuais para checkboxes
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            this.parentElement.style.background = '#e3f2fd';
+            this.parentElement.style.transform = 'scale(1.02)';
+        } else {
+            this.parentElement.style.background = 'white';
+            this.parentElement.style.transform = 'scale(1)';
+        }
+    });
+});
+
+// Função de impressão
+function imprimirOrcamento() {
+    console.log("🖨️ Imprimindo orçamento...");
+    window.print();
 }
 
 // Inicialização ao carregar a página

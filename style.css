@@ -383,3 +383,26 @@ button:hover {
 .item-orcamento {
     animation: slideInUp 0.5s ease-out;
 }
+
+/* acréscimo da terceira fase*/
+
+/* === ESTILOS PARA EDIÇÃO === */
+.botoes-formulario {
+    display: flex;
+    gap: 10px;
+}
+
+.botoes-formulario button {
+    flex: 1;
+}
+
+/* Efeito visual para modo edição */
+
+.form-orcamento.modo-edicao {
+    border: 2px solid #ffc107;
+    background: #fffbf0;
+}
+
+.form-orcamento.modo-edicao .form-section {
+    border-left-color: #ffc107;
+}
