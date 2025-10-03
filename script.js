@@ -288,10 +288,14 @@ function exibirResultado(orcamento) {
         html += `<div class="observacoes"><strong>📝 Observações:</strong> ${orcamento.observacoes}</div>`;
     }
 
-    html += `
+        html += `
         <p><em>✅ Orçamento salvo no histórico - Válido por 30 dias</em></p>
-        <button onclick="verificarLocalStorage()" class="btn-testar">🧪 Testar Armazenamento</button>
-        <button onclick="limparFormulario()" class="btn-limpar">🆕 Novo Orçamento</button>
+        <div class="botoes-resultado">
+            <button onclick="verificarLocalStorage()" class="btn-testar">🧪 Testar Armazenamento</button>
+            <button onclick="gerarPDF(${JSON.stringify(orcamento).replace(/"/g, '&quot;')})" class="btn-pdf">📄 Gerar PDF Profissional</button>
+            <button onclick="gerarPDFSimples(${JSON.stringify(orcamento).replace(/"/g, '&quot;')})" class="btn-pdf">⚡ PDF Rápido</button>
+            <button onclick="limparFormulario()" class="btn-limpar">🆕 Novo Orçamento</button>
+        </div>
     `;
 
     detalhes.innerHTML = html;
@@ -612,6 +616,237 @@ document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
 function imprimirOrcamento() {
     console.log("🖨️ Imprimindo orçamento...");
     window.print();
+}
+// === FUNÇÕES PARA GERAÇÃO DE PDF ===
+
+// Função para gerar PDF profissional
+async function gerarPDF(orcamento) {
+    console.log("📄 Iniciando geração de PDF...", orcamento.id);
+    
+    try {
+        // Mostrar loading
+        mostrarMensagemSucesso('Gerando PDF... ⏳');
+        
+        // Criar elemento temporário para o PDF
+        const elementoPDF = criarEstruturaPDF(orcamento);
+        
+        // Adicionar ao DOM temporariamente
+        document.body.appendChild(elementoPDF);
+        
+        // Gerar PDF
+        await gerarPDFComHtml2canvas(elementoPDF, orcamento);
+        
+        // Remover elemento temporário
+        document.body.removeChild(elementoPDF);
+        
+        console.log("✅ PDF gerado com sucesso!");
+        
+    } catch (erro) {
+        console.error("❌ Erro ao gerar PDF:", erro);
+        alert('Erro ao gerar PDF. Tente novamente.');
+    }
+}
+
+// Função para criar a estrutura HTML do PDF
+function criarEstruturaPDF(orcamento) {
+    const container = document.createElement('div');
+    container.className = 'container-pdf';
+    container.style.cssText = `
+        position: fixed;
+        left: -10000px;
+        top: 0;
+        width: 800px;
+        background: white;
+        padding: 30px;
+        font-family: Arial, sans-serif;
+    `;
+    
+    const dataEmissao = new Date().toLocaleDateString('pt-BR');
+    
+    container.innerHTML = `
+        <div class="cabecalho-pdf">
+            <h1>ORÇAMENTO - CADEIRA DE RODAS</h1>
+            <div class="empresa">Sua Empresa de Consertos</div>
+            <div class="empresa">CNPJ: 12.345.678/0001-90</div>
+            <div class="empresa">Tel: (11) 9999-8888 | Email: contato@empresa.com</div>
+        </div>
+        
+        <div class="info-orcamento-pdf">
+            <div class="info-cliente-pdf">
+                <h3>DADOS DO CLIENTE</h3>
+                <p><strong>Nome:</strong> ${orcamento.cliente.nome}</p>
+                <p><strong>Telefone:</strong> ${orcamento.cliente.telefone || 'Não informado'}</p>
+                <p><strong>Email:</strong> ${orcamento.cliente.email || 'Não informado'}</p>
+            </div>
+            
+            <div class="info-documento-pdf">
+                <h3>DOCUMENTO</h3>
+                <p><strong>Nº do Orçamento:</strong> ${orcamento.id}</p>
+                <p><strong>Data de Emissão:</strong> ${dataEmissao}</p>
+                <p><strong>Data do Serviço:</strong> ${orcamento.data}</p>
+                <p><strong>Prazo de Validade:</strong> 30 dias</p>
+            </div>
+        </div>
+        
+        <div class="servicos-pdf">
+            <h3>SERVIÇOS SOLICITADOS</h3>
+            <table class="tabela-servicos-pdf">
+                <thead>
+                    <tr>
+                        <th>Descrição do Serviço</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unitário</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orcamento.servicos.map(servico => `
+                        <tr>
+                            <td>${servico.nome}</td>
+                            <td>1</td>
+                            <td>R$ ${servico.valor.toFixed(2)}</td>
+                            <td>R$ ${servico.valor.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="total-pdf">
+            <strong>TOTAL: R$ ${orcamento.total.toFixed(2)}</strong>
+        </div>
+        
+        ${orcamento.observacoes ? `
+        <div class="observacoes-pdf">
+            <h3>OBSERVAÇÕES</h3>
+            <p>${orcamento.observacoes}</p>
+        </div>
+        ` : ''}
+        
+        <div class="condicoes-pdf">
+            <h3>CONDIÇÕES E PRAZOS</h3>
+            <p><strong>Prazo de Execução:</strong> ${obterPrazo(orcamento.urgencia)}</p>
+            <p><strong>Forma de Pagamento:</strong> À combinar</p>
+            <p><strong>Garantia:</strong> 90 dias para serviços executados</p>
+        </div>
+        
+        <div class="rodape-pdf">
+            <p>Agradecemos pela preferência! Este orçamento é válido por 30 dias.</p>
+            <p>Endereço: Rua Exemplo, 123 - Centro - São Paulo/SP - CEP: 01234-567</p>
+        </div>
+    `;
+    
+    return container;
+}
+
+// Função para gerar PDF usando html2canvas
+async function gerarPDFComHtml2canvas(elemento, orcamento) {
+    const { jsPDF } = window.jspdf;
+    
+    // Configurações do canvas
+    const opcoes = {
+        scale: 2,
+        useCORS: true,
+        logging: false
+    };
+    
+    // Capturar o HTML como imagem
+    const canvas = await html2canvas(elemento, opcoes);
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Criar PDF
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calcular proporções da imagem
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = imgHeight / imgWidth;
+    const pdfImgHeight = pdfWidth * ratio;
+    
+    // Adicionar imagem ao PDF
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfImgHeight);
+    
+    // Se a imagem for maior que uma página, adicionar páginas extras
+    let alturaRestante = pdfImgHeight - pdfHeight;
+    let posicaoY = -pdfHeight;
+    
+    while (alturaRestante > 0) {
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, posicaoY, pdfWidth, pdfImgHeight);
+        alturaRestante -= pdfHeight;
+        posicaoY -= pdfHeight;
+    }
+    
+    // Salvar PDF
+    pdf.save(`orcamento-${orcamento.id}.pdf`);
+}
+
+// Função simplificada para PDF rápido (alternativa)
+function gerarPDFSimples(orcamento) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    
+    // Configurações iniciais
+    pdf.setFontSize(16);
+    pdf.setTextColor(40, 40, 40);
+    
+    // Cabeçalho
+    pdf.text('ORÇAMENTO - CADEIRA DE RODAS', 20, 20);
+    pdf.setFontSize(10);
+    pdf.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
+    pdf.text(`Nº: ${orcamento.id}`, 150, 30);
+    
+    // Linha divisória
+    pdf.line(20, 35, 190, 35);
+    
+    // Dados do cliente
+    pdf.setFontSize(12);
+    pdf.text('DADOS DO CLIENTE:', 20, 45);
+    pdf.setFontSize(10);
+    pdf.text(`Nome: ${orcamento.cliente.nome}`, 20, 55);
+    pdf.text(`Telefone: ${orcamento.cliente.telefone || 'N/I'}`, 20, 62);
+    pdf.text(`Email: ${orcamento.cliente.email || 'N/I'}`, 20, 69);
+    
+    // Serviços
+    let y = 85;
+    pdf.setFontSize(12);
+    pdf.text('SERVIÇOS:', 20, y);
+    y += 10;
+    
+    pdf.setFontSize(10);
+    orcamento.servicos.forEach((servico, index) => {
+        pdf.text(`${index + 1}. ${servico.nome}`, 25, y);
+        pdf.text(`R$ ${servico.valor.toFixed(2)}`, 160, y);
+        y += 7;
+    });
+    
+    // Total
+    y += 10;
+    pdf.setFontSize(12);
+    pdf.text(`TOTAL: R$ ${orcamento.total.toFixed(2)}`, 160, y);
+    
+    // Observações
+    if (orcamento.observacoes) {
+        y += 15;
+        pdf.setFontSize(12);
+        pdf.text('OBSERVAÇÕES:', 20, y);
+        y += 7;
+        pdf.setFontSize(10);
+        
+        // Quebrar texto longo
+        const observacoes = pdf.splitTextToSize(orcamento.observacoes, 170);
+        pdf.text(observacoes, 20, y);
+    }
+    
+    // Rodapé
+    const pageHeight = pdf.internal.pageSize.height;
+    pdf.setFontSize(8);
+    pdf.text('Agradecemos pela preferência! Orçamento válido por 30 dias.', 20, pageHeight - 20);
+    
+    // Salvar
+    pdf.save(`orcamento-${orcamento.id}.pdf`);
 }
 
 // Inicialização ao carregar a página

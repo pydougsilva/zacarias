@@ -406,3 +406,201 @@ button:hover {
 .form-orcamento.modo-edicao .form-section {
     border-left-color: #ffc107;
 }
+/* === ESTILOS PARA PDF/IMPRESSÃO === */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    .container-pdf, .container-pdf * {
+        visibility: visible;
+    }
+    
+    .container-pdf {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+.container-pdf {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+}
+
+.cabecalho-pdf {
+    text-align: center;
+    border-bottom: 3px solid #333;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.cabecalho-pdf h1 {
+    color: #333;
+    margin: 0;
+    font-size: 28px;
+}
+
+.cabecalho-pdf .empresa {
+    color: #666;
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.info-orcamento-pdf {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.info-cliente-pdf, .info-documento-pdf {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.tabela-servicos-pdf {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.tabela-servicos-pdf th {
+    background: #667eea;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.tabela-servicos-pdf td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabela-servicos-pdf tr:hover {
+    background: #f5f5f5;
+}
+
+.total-pdf {
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #667eea;
+}
+
+.observacoes-pdf {
+    margin-top: 30px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rodape-pdf {
+    margin-top: 40px;
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.btn-pdf {
+    background: #dc3545 !important;
+    margin: 5px;
+}
+
+.btn-pdf:hover {
+    background: #c82333 !important;
+}
+/* === ESTILOS PARA OS BOTÕES DE RESULTADO === */
+.botoes-resultado {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.botoes-resultado button {
+    flex: 1;
+    min-width: 160px;
+    margin: 5px 0;
+    padding: 12px 15px !important;
+    font-size: 14px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.botoes-resultado button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Botão PDF Profissional */
+.btn-pdf {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    color: white !important;
+}
+
+.btn-pdf:hover {
+    background: linear-gradient(135deg, #c82333, #a71e2a) !important;
+}
+
+/* Botão Testar */
+.btn-testar {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    color: white !important;
+}
+
+.btn-testar:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+}
+
+/* Botão Limpar/Novo */
+.btn-limpar {
+    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+    color: white !important;
+}
+
+.btn-limpar:hover {
+    background: linear-gradient(135deg, #5a6268, #545b62) !important;
+}
+
+/* Efeitos de foco e ativo */
+.botoes-resultado button:active {
+    transform: translateY(0);
+}
+
+.botoes-resultado button:focus {
+    outline: 2px solid rgba(255,255,255,0.5);
+    outline-offset: 2px;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+    .botoes-resultado {
+        flex-direction: column;
+    }
+    
+    .botoes-resultado button {
+        min-width: 100%;
+        margin: 5px 0;
+    }
+}
